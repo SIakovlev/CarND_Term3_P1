@@ -82,12 +82,13 @@ int main() {
 
           // Show vehicles ahead and behind of the ego vehicle
           // ----------------------------------------------------
-          std::vector<bool> vehicles_ahead = p.vehicles_around(30, true);
+          std::vector<int> distance_range = {30, 10};
+          std::vector<int> vehicles_ahead = p.vehicles_around(distance_range, true);
           cout << "Vehicles_ahead: ";
           for (int i = 0; i <= 2; i++) {
             cout << vehicles_ahead[i] << " ";
           }
-          std::vector<bool> vehicles_behind = p.vehicles_around(10, false);
+          std::vector<int> vehicles_behind = p.vehicles_around(distance_range, false);
           cout << "  " << "Vehicles behind: ";
           for (int i = 0; i <= 2; i++) {
             cout << vehicles_behind[i] << " ";
@@ -98,43 +99,60 @@ int main() {
           const int num_of_lanes = 2;
           auto current_lane = p.get_lane();
           // Generate next trajectory points
-          if (vehicles_ahead[current_lane]) {
+          if (vehicles_ahead[current_lane] != -1) {
+            auto vehicle_ahead_id = vehicles_ahead[current_lane];
             if (current_lane == 1) {
               // Assess available lanes
+              auto right_lane_cost = p.lane_cost(distance_range, current_lane + 1);
+              auto left_lane_cost = p.lane_cost(distance_range, current_lane - 1);
+              cout << "Costs: " << "left lane - " << left_lane_cost << "right lane - " << right_lane_cost << endl;
+
               // Change left or right
-              if (!vehicles_ahead[current_lane + 1]) {
+              //if (vehicles_ahead[current_lane + 1] == -1) {
+              if ((!right_lane_cost) || (left_lane_cost > right_lane_cost)) {
                 cout << "Lane change to the right" << endl;
                 p.change_lane(current_lane + 1);
-              } else if (!vehicles_ahead[current_lane - 1]) {
+              } //else if (vehicles_ahead[current_lane - 1]  == -1) {
+              else if ((!left_lane_cost) || (left_lane_cost < right_lane_cost)) {
                   cout << "Lane change to the left" << endl;
                   p.change_lane(current_lane - 1);
               } else {
-                  cout << "Set speed limit" << endl;
-                  p.set_speed_limit(29.5);
+                  //cout << "Set speed limit" << endl;
+                cout << "Keep distance,  id: " << vehicle_ahead_id << endl;
+                p.keep_distance(20, vehicle_ahead_id);
+                  //p.set_speed_limit(29.5);
               }
 
             } else if (current_lane == 0) {
-
-              if (!vehicles_ahead[current_lane + 1]) {
+              auto middle_lane_cost = p.lane_cost(distance_range, current_lane + 1);
+              //if (vehicles_ahead[current_lane + 1] == -1) {
+              if (middle_lane_cost < 100) {
                 cout << "Lane change to the right" << endl;
                 p.change_lane(current_lane + 1);
               } else {
-                  cout << "Set speed limit" << endl;
-                  p.set_speed_limit(29.5);
+                cout << "Keep distance,  id: " << vehicle_ahead_id << endl;
+                p.keep_distance(20, vehicle_ahead_id);
+                  //cout << "Set speed limit" << endl;
+                  //p.set_speed_limit(29.5);
               }
 
             } else if (current_lane == 2) {
-              if (!vehicles_ahead[current_lane - 1]) {
+              auto middle_lane_cost = p.lane_cost(distance_range, current_lane - 1);
+              //if (vehicles_ahead[current_lane - 1] == -1) {
+              if (middle_lane_cost < 100) {
                 cout << "Lane change to the left" << endl;
                 p.change_lane(current_lane - 1);
               } else {
-                  cout << "Set speed limit" << endl;
-                  p.set_speed_limit(29.5);
+                cout << "Keep distance,  id: " << vehicle_ahead_id << endl;
+                p.keep_distance(20, vehicle_ahead_id);
+                  //cout << "Set speed limit" << endl;
+                  //p.set_speed_limit(29.5);
               }
             }
           } else {
             p.set_speed_limit(49.5);
           }
+          //p.speed_control(0.224);
           next_xy_vals = p.generate_trajectory(20.0);
 
           json msgJson;

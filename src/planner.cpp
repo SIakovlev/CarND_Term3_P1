@@ -80,6 +80,7 @@ std::vector<std::vector<double>> Planner::generate_trajectory(int goal) {
       ptsy[i] = (shift_x * sin(0.0 - ref_yaw) + shift_y * cos(0.0 - ref_yaw));
     }
 
+    
     if (target_speed < speed_limit) {
       	target_speed += 0.224;
       // cout << "New reference speed: " << target_speed << endl;
@@ -149,13 +150,15 @@ int Planner::get_lane() {
 	return lane_n;
 }
 
-std::vector<bool> Planner::vehicles_around(int dist, bool dir) {
+std::vector<int> Planner::vehicles_around(std::vector<int> dist_range, bool dir) {
 	//
 	// dist is a distance to vehicle in direction dir (in meters)
 	// dir = true - ahead
 	// dir = false - behind
 	//
-	std::vector<bool> vehicles_found = {false, false, false};
+	//std::vector<bool> vehicles_found = {false, false, false};
+
+  std::vector<int> vehicles_found = {-1, -1, -1};
 	for (int i = 0; i < sensor_fusion.size(); i++) {
 		double vehicle_d = sensor_fusion[i][6];
 		double vehicle_s = sensor_fusion[i][5];
@@ -170,15 +173,15 @@ std::vector<bool> Planner::vehicles_around(int dist, bool dir) {
 				// if we're interested in vehicles in front of us
 				if (dir) {
 					//std::cout << "Check for vehicles ahead..." << std::endl;
-					if ((vehicle_s_next > end_path_s) && ((vehicle_s_next - end_path_s) < dist))
-						vehicles_found[lane] = true;
+					if ((vehicle_s_next > end_path_s) && ((vehicle_s_next - end_path_s) < dist_range[0]))
+						vehicles_found[lane] = sensor_fusion[i][0];
 				} 
 				// if we are interested in vehicles behind us
 				else { 
 					//std::cout << "Check for vehicles behind..." << std::endl;
 					//if ((vehicle_s_next < end_path_s) && ((end_path_s - vehicle_s_next) < dist))
-					if ((vehicle_s_next < end_path_s) && ((end_path_s - vehicle_s_next) < dist))
-						vehicles_found[lane] = true;
+					if ((vehicle_s_next < end_path_s) && ((end_path_s - vehicle_s_next) < dist_range[1]))
+						vehicles_found[lane] = sensor_fusion[i][0];
 				}
 			}
 		}
@@ -186,29 +189,60 @@ std::vector<bool> Planner::vehicles_around(int dist, bool dir) {
 	return vehicles_found;
 }
 
-double Planner::lane_cost(int lane) {
+double Planner::lane_cost(std::vector<int> dist_range, int lane) {
 	int counter = 0;
+  int cost = 0;
 	double avg_speed = 0.0;
+  cout << "Cost calculation process, lane: " << lane << endl;
 	for (int i = 0; i < sensor_fusion.size(); i++) {
 		double vehicle_d = sensor_fusion[i][6];
 		// if there is a vehicle on the lane
 		if ((vehicle_d >= 4*lane) && (vehicle_d <= 4*lane + 4)) {
-			// count it
-			counter ++;
 
 			double vehicle_s = sensor_fusion[i][5];
 			double vy = sensor_fusion[i][4];
 			double vx = sensor_fusion[i][3];
 			double vehicle_speed = sqrt(vx*vx + vy*vy);
 			double vehicle_s_next = vehicle_s + (double)(previous_path_x.size()) * delta_t * vehicle_speed;
-			
-			// if this vehicle is in front of us
-			if (vehicle_s_next > end_path_s) {
-				avg_speed += 1.0/counter * (vehicle_speed - avg_speed);
-			} else {
 
-			}
+      // if there is a vehicle behind or ahead within a close range, then the lane change is forbidden
+      if (((vehicle_s_next < end_path_s) && ((end_path_s - vehicle_s_next) < dist_range[1])) || 
+        ((vehicle_s_next > end_path_s) && ((vehicle_s_next - end_path_s) < dist_range[0]))) {
+        cout << "There are vehicles behind or ahead" << endl;
+        cout << "Resulting cost: 100" << endl;
+        return 100;
+      } else {
+        cout << "Hmm there is a vehicle on the lane" << endl;
+        // count it
+        counter ++;
+        // calc average speed
+        avg_speed += 1.0/counter * (vehicle_speed - avg_speed);
+        cost = (int)avg_speed;
+      }
 		}
-		
 	}
+  cout << "Resulting cost: " << cost << endl;
+  return cost;
+}
+
+
+void Planner::keep_distance(int dist, int id) {
+  // find the vehicle with given id
+  int vehicle_num = -1;
+  for (int i = 0; i < sensor_fusion.size(); i++) {
+    if (sensor_fusion[i][0] == id) {
+      vehicle_num = i;
+      break;
+    }
+  }
+  double vehicle_s = sensor_fusion[vehicle_num][5];
+  double vy = sensor_fusion[vehicle_num][4];
+  double vx = sensor_fusion[vehicle_num][3];
+  double vehicle_speed = sqrt(vx*vx + vy*vy);
+  double vehicle_s_next = vehicle_s + (double)(previous_path_x.size()) * delta_t * vehicle_speed;
+  if ((vehicle_s_next - end_path_s) < dist) {
+    set_speed_limit(vehicle_speed*2.24); // convert mps to mph
+  } else {
+    set_speed_limit(speed_limit);
+  }
 }

@@ -74,10 +74,13 @@ public:
 
 	void set_speed_limit(int value);
 	void change_lane(int value);
+	void keep_distance(int dist, int id);
 
+	double lane_cost(std::vector<int> dist_range, int lane);
 	int get_lane();
 
-	std::vector<bool> vehicles_around(int dist, bool dir);
+	std::vector<int> vehicles_around(std::vector<int> dist_range, bool dir);
+
 };
 
 #endif

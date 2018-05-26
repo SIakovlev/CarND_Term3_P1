@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/sergey/dev/studies/CarND_Term3/CarND-Path-Planning-Project/src/helper.cpp" "/home/sergey/dev/studies/CarND_Term3/CarND-Path-Planning-Project/build/CMakeFiles/path_planning.dir/src/helper.cpp.o"
-  "/home/sergey/dev/studies/CarND_Term3/CarND-Path-Planning-Project/src/main.cpp" "/home/sergey/dev/studies/CarND_Term3/CarND-Path-Planning-Project/build/CMakeFiles/path_planning.dir/src/main.cpp.o"
-  "/home/sergey/dev/studies/CarND_Term3/CarND-Path-Planning-Project/src/planner.cpp" "/home/sergey/dev/studies/CarND_Term3/CarND-Path-Planning-Project/build/CMakeFiles/path_planning.dir/src/planner.cpp.o"
+  "/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/helper.cpp" "/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/build/CMakeFiles/path_planning.dir/src/helper.cpp.o"
+  "/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/main.cpp" "/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/build/CMakeFiles/path_planning.dir/src/main.cpp.o"
+  "/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/planner.cpp" "/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/build/CMakeFiles/path_planning.dir/src/planner.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
