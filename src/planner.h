@@ -46,6 +46,8 @@ public:
   	double target_speed = 0.0; // mph speed limit
   	const double delta_t = 0.02;
     double speed_limit = 49.5;
+    std::vector<double> spline_points = {-100, -10, -5, -3, -2, -1, 0, 1, 2, 3, 5, 10, 100};
+    int spline_iterator = 0;
 
 
 	/*
@@ -70,6 +72,7 @@ public:
 
 
 	std::vector<std::vector<double>> generate_trajectory(int goal);
+	std::vector<std::vector<double>> generate_spline_points();
 
 
 	void set_speed_limit(int value);

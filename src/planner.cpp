@@ -30,6 +30,28 @@ void Planner::read_data(json& data_obj, std::vector<std::vector<double>>& map_da
 	this->map_waypoints_dy = map_data[4];
 }
 
+std::vector<std::vector<double>> Planner::generate_spline_points() {
+  int lane_d = 2+4*lane_n;
+  int goal_lane_d = 2+4*goal_lane_n;
+  int dist_inc = 50;
+  static bool turning_flag = false;
+  if ((lane_n == goal_lane_n) && (!turning_flag)) {
+    auto p0 = getXY(car_s + dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    auto p1 = getXY(car_s + 2*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    auto p2 = getXY(car_s + 3*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    return {p0, p1, p2};
+  } else {
+    turning_flag = true;
+    lane_n = goal_lane_n;
+    auto p0 = getXY(car_s + dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    auto p1 = getXY(car_s + 2*dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    auto p2 = getXY(car_s + 3*dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    if (spline_iterator > spline_points.size())
+      turning_flag = false;
+    return {p0, p1, p2};
+  }
+}
+
 std::vector<std::vector<double>> Planner::generate_trajectory(int goal) {
 	// Define spline points
     std::vector<double> ptsx;
@@ -59,6 +81,7 @@ std::vector<std::vector<double>> Planner::generate_trajectory(int goal) {
     }
     
     // Add some more points to the spline
+    /*
     int lane_d = 2+4*lane_n;
     int goal_lane_d = 2+4*goal_lane_n;
     int dist_inc = 50;
@@ -76,9 +99,10 @@ std::vector<std::vector<double>> Planner::generate_trajectory(int goal) {
       next_wp1 = getXY(car_s + 2*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
       next_wp2 = getXY(car_s + 3*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
     }
-
-    ptsx.insert(ptsx.end(), {next_wp0[0], next_wp1[0], next_wp2[0]});
-    ptsy.insert(ptsy.end(), {next_wp0[1], next_wp1[1], next_wp2[1]});
+    */
+    std::vector<std::vector<double>> next_wp = generate_spline_points();
+    ptsx.insert(ptsx.end(), {next_wp[0][0], next_wp[1][0], next_wp[2][0]});
+    ptsy.insert(ptsy.end(), {next_wp[0][1], next_wp[1][1], next_wp[2][1]});
 
     // Convert point to the local frame
     for(int i = 0; i < ptsx.size(); i++)

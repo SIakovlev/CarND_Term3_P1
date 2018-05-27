@@ -9,6 +9,7 @@ using namespace std;
 
 double deg2rad(double x);
 double rad2deg(double x);
+double logistic(double x);
 string hasData(string s);
 double distance(double x1, double y1, double x2, double y2);
 int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x, const std::vector<double> &maps_y);
