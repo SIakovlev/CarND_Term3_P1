@@ -6,17 +6,14 @@ Planner::~Planner() {}
 
 void Planner::read_data(json& data_obj, std::vector<std::vector<double>>& map_data) {
 
-    //this->lane = lane;
-    //this->state = state;
-
 	// JSON data
-    this->car_x = data_obj["x"];
-  	this->car_y = data_obj["y"];
-  	this->car_s = data_obj["s"];
-  	this->car_d = data_obj["d"];
-  	this->car_yaw = data_obj["yaw"];
-  	this->car_speed = data_obj["speed"];
-  	// Previous path data given to the Planner
+  this->car_x = data_obj["x"];
+	this->car_y = data_obj["y"];
+	this->car_s = data_obj["s"];
+	this->car_d = data_obj["d"];
+	this->car_yaw = data_obj["yaw"];
+	this->car_speed = data_obj["speed"];
+	// Previous path data given to the Planner
 	this->previous_path_x = data_obj["previous_path_x"];
 	this->previous_path_y = data_obj["previous_path_y"];
 	// Previous path's end s and d values 
@@ -63,11 +60,23 @@ std::vector<std::vector<double>> Planner::generate_trajectory(int goal) {
     
     // Add some more points to the spline
     int lane_d = 2+4*lane_n;
-    //int goal_lane_d = 2+4*goal_lane_n;
+    int goal_lane_d = 2+4*goal_lane_n;
     int dist_inc = 50;
-    std::vector<double> next_wp0 = getXY(car_s + dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    std::vector<double> next_wp1 = getXY(car_s + 2*dist_inc, lane_d , map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    std::vector<double> next_wp2 = getXY(car_s + 3*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    std::vector<double> next_wp0;
+    std::vector<double> next_wp1;
+    std::vector<double> next_wp2;
+
+    if (goal_lane_n != lane_n) {
+      next_wp0 = getXY(car_s + dist_inc, (double)lane_d * 0.8 + (double)goal_lane_d * 0.2, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+      next_wp1 = getXY(car_s + 2*dist_inc, (double)lane_d * 0.5 + (double)goal_lane_d * 0.5, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+      next_wp2 = getXY(car_s + 3*dist_inc, (double)lane_d * 0.3 + (double)goal_lane_d * 0.7, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+      lane_n = goal_lane_n;
+    } else {
+      next_wp0 = getXY(car_s + dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+      next_wp1 = getXY(car_s + 2*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+      next_wp2 = getXY(car_s + 3*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+    }
+
     ptsx.insert(ptsx.end(), {next_wp0[0], next_wp1[0], next_wp2[0]});
     ptsy.insert(ptsy.end(), {next_wp0[1], next_wp1[1], next_wp2[1]});
 
@@ -143,7 +152,7 @@ void Planner::set_speed_limit(int value) {
 }
 
 void Planner::change_lane(int value) {
-	this->lane_n = value;
+	this->goal_lane_n = value;
 }
 
 int Planner::get_lane() {
@@ -172,14 +181,17 @@ std::vector<int> Planner::vehicles_around(std::vector<int> dist_range, bool dir)
 			if ((vehicle_d >= 4*lane) && (vehicle_d <= 4*lane + 4)) {
 				// if we're interested in vehicles in front of us
 				if (dir) {
-					//std::cout << "Check for vehicles ahead..." << std::endl;
-					if ((vehicle_s_next > end_path_s) && ((vehicle_s_next - end_path_s) < dist_range[0]))
-						vehicles_found[lane] = sensor_fusion[i][0];
+          int closest_dist = 100;
+					if ((vehicle_s_next > end_path_s) && ((vehicle_s_next - end_path_s) < dist_range[0])) {
+            if ((vehicle_s_next - end_path_s) < closest_dist) {
+              vehicles_found[lane] = sensor_fusion[i][0];
+              closest_dist = (vehicle_s_next - end_path_s);
+              set_speed_limit(vehicle_speed*2.24);
+            } 
+          }
 				} 
 				// if we are interested in vehicles behind us
 				else { 
-					//std::cout << "Check for vehicles behind..." << std::endl;
-					//if ((vehicle_s_next < end_path_s) && ((end_path_s - vehicle_s_next) < dist))
 					if ((vehicle_s_next < end_path_s) && ((end_path_s - vehicle_s_next) < dist_range[1]))
 						vehicles_found[lane] = sensor_fusion[i][0];
 				}
@@ -208,11 +220,10 @@ double Planner::lane_cost(std::vector<int> dist_range, int lane) {
       // if there is a vehicle behind or ahead within a close range, then the lane change is forbidden
       if (((vehicle_s_next < end_path_s) && ((end_path_s - vehicle_s_next) < dist_range[1])) || 
         ((vehicle_s_next > end_path_s) && ((vehicle_s_next - end_path_s) < dist_range[0]))) {
-        cout << "There are vehicles behind or ahead" << endl;
-        cout << "Resulting cost: 100" << endl;
+        cout << "Lane change is dangerous" << endl;
         return 100;
       } else {
-        cout << "Hmm there is a vehicle on the lane" << endl;
+        cout << "Lane change is possible. Calculating cost" << endl;
         // count it
         counter ++;
         // calc average speed
@@ -235,12 +246,13 @@ void Planner::keep_distance(int dist, int id) {
       break;
     }
   }
+  cout << "Keep distance routine" << endl;
   double vehicle_s = sensor_fusion[vehicle_num][5];
   double vy = sensor_fusion[vehicle_num][4];
   double vx = sensor_fusion[vehicle_num][3];
   double vehicle_speed = sqrt(vx*vx + vy*vy);
   double vehicle_s_next = vehicle_s + (double)(previous_path_x.size()) * delta_t * vehicle_speed;
-  if ((vehicle_s_next - end_path_s) < dist) {
+  if (fabs(vehicle_s_next - end_path_s) < dist) {
     set_speed_limit(vehicle_speed*2.24); // convert mps to mph
   } else {
     set_speed_limit(speed_limit);
