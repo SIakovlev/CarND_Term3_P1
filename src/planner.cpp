@@ -46,8 +46,10 @@ std::vector<std::vector<double>> Planner::generate_spline_points() {
     auto p0 = getXY(car_s + dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
     auto p1 = getXY(car_s + 2*dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
     auto p2 = getXY(car_s + 3*dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    if (spline_iterator > spline_points.size())
+    if (spline_iterator > spline_points.size()) {
+      spline_iterator = 0;
       turning_flag = false;
+    }
     return {p0, p1, p2};
   }
 }
@@ -115,10 +117,10 @@ std::vector<std::vector<double>> Planner::generate_trajectory(int goal) {
 
     
     if (target_speed < speed_limit) {
-      	target_speed += 0.224;
+      	target_speed += acceleration;
       // cout << "New reference speed: " << target_speed << endl;
     } else {
-    	target_speed -= 0.224;
+    	target_speed -= decceleration;
     }
     
     #if DEBUG 
@@ -277,8 +279,10 @@ void Planner::keep_distance(int dist, int id) {
   double vehicle_speed = sqrt(vx*vx + vy*vy);
   double vehicle_s_next = vehicle_s + (double)(previous_path_x.size()) * delta_t * vehicle_speed;
   if (fabs(vehicle_s_next - end_path_s) < dist) {
+    decceleration = 0.4;
     set_speed_limit(vehicle_speed*2.24); // convert mps to mph
   } else {
     set_speed_limit(speed_limit);
+    decceleration = 0.224;
   }
 }

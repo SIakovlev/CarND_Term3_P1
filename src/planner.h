@@ -48,6 +48,8 @@ public:
     double speed_limit = 49.5;
     std::vector<double> spline_points = {-100, -10, -5, -3, -2, -1, 0, 1, 2, 3, 5, 10, 100};
     int spline_iterator = 0;
+    double acceleration = 0.224;
+    double decceleration = 0.224;
 
 
 	/*
