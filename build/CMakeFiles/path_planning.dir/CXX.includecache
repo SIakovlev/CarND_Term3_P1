@@ -855,10 +855,6 @@ thread
 -
 vector
 -
-Eigen-3.3/Eigen/Core
-/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/Core
-Eigen-3.3/Eigen/QR
-/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/QR
 json.hpp
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/json.hpp
 planner.h
@@ -873,6 +869,10 @@ vector
 -
 json.hpp
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/json.hpp
+Eigen-3.3/Eigen/Core
+/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/Core
+Eigen-3.3/Eigen/QR
+/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/QR
 spline.h
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h
 helper.h

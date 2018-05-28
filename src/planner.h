@@ -3,10 +3,12 @@
 
 #include <vector>
 #include "json.hpp"
+#include "Eigen-3.3/Eigen/Core"
+#include "Eigen-3.3/Eigen/QR"
 #include "spline.h"
 #include "helper.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 using json = nlohmann::json;
 
@@ -51,20 +53,6 @@ public:
     double acceleration = 0.224;
     double decceleration = 0.224;
 
-
-	/*
-	int lane;
-	int s;
-	float v;
-	float a;
-	float target_speed;
-	int lanes_available;
-	float max_acceleration;
-	int goal_lane;
-	int goal_s;
-	string state;
-	*/
-
 	// Constructor
 	Planner();
 	// Destructor (virtual???)
@@ -73,8 +61,13 @@ public:
 	void read_data(json& data_obj, std::vector<std::vector<double>>& map_data);
 
 
-	std::vector<std::vector<double>> generate_trajectory(int goal);
+	std::vector<std::vector<double>> generate_trajectory(double goal);
 	std::vector<std::vector<double>> generate_spline_points();
+
+	std::vector<std::vector<double>> generate_jm_trajectory(double goal);
+	std::vector<double> jmt_coefficients(std::vector<double> start, std::vector<double> end, double T);
+	double jmt(double t, std::vector<double> alphas);
+	
 
 
 	void set_speed_limit(int value);

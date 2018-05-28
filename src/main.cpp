@@ -5,8 +5,6 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "Eigen-3.3/Eigen/Core"
-#include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 #include "planner.h"
 
@@ -79,7 +77,7 @@ int main() {
           // Send JSON and map data to the planner
           p.read_data(j[1], map_data);
 
-
+          
           // Show vehicles ahead and behind of the ego vehicle
           // ----------------------------------------------------
           std::vector<int> distance_range = {20, 10};
@@ -95,7 +93,7 @@ int main() {
           }
           cout << endl;
           // ----------------------------------------------------
-
+          
           const int num_of_lanes = 2;
           auto current_lane = p.get_lane();
           // Generate next trajectory points
@@ -109,11 +107,11 @@ int main() {
 
               // Change left or right
               //if (vehicles_ahead[current_lane + 1] == -1) {
-              if ((!right_lane_cost) || (left_lane_cost > right_lane_cost)) {
+              if ((!right_lane_cost) || ((left_lane_cost >= right_lane_cost) && right_lane_cost != 100)) {
                 cout << "Lane change to the right" << endl;
                 p.change_lane(current_lane + 1);
               } //else if (vehicles_ahead[current_lane - 1]  == -1) {
-              else if ((!left_lane_cost) || (left_lane_cost < right_lane_cost)) {
+              else if ((!left_lane_cost) || ((left_lane_cost <= right_lane_cost) && left_lane_cost != 100)) {
                   cout << "Lane change to the left" << endl;
                   p.change_lane(current_lane - 1);
               } else {
