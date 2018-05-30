@@ -8,7 +8,7 @@
 #include "spline.h"
 #include "helper.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 using json = nlohmann::json;
 
@@ -62,9 +62,8 @@ public:
 
 
 	std::vector<std::vector<double>> generate_trajectory(double goal);
-	std::vector<std::vector<double>> generate_spline_points();
+	tk::spline generate_spline(std::vector<double> start, std::vector<double> end);
 
-	std::vector<std::vector<double>> generate_jm_trajectory(double goal);
 	std::vector<double> jmt_coefficients(std::vector<double> start, std::vector<double> end, double T);
 	double jmt(double t, std::vector<double> alphas);
 	
@@ -76,6 +75,7 @@ public:
 
 	double lane_cost(std::vector<int> dist_range, int lane);
 	int get_lane();
+	std::vector<std::vector<double>> get_sf();
 
 	std::vector<int> vehicles_around(std::vector<int> dist_range, bool dir);
 

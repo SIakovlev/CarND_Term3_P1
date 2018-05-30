@@ -142,6 +142,7 @@ path_planning: CMakeFiles/path_planning.dir/src/main.cpp.o
 path_planning: CMakeFiles/path_planning.dir/src/planner.cpp.o
 path_planning: CMakeFiles/path_planning.dir/src/helper.cpp.o
 path_planning: CMakeFiles/path_planning.dir/build.make
+path_planning: /usr/lib/x86_64-linux-gnu/libpython2.7.so
 path_planning: CMakeFiles/path_planning.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable path_planning"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/path_planning.dir/link.txt --verbose=$(VERBOSE)

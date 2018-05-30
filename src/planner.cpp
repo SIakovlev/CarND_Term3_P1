@@ -30,28 +30,102 @@ void Planner::read_data(json& data_obj, std::vector<std::vector<double>>& map_da
 	this->map_waypoints_dy = map_data[4];
 }
 
-std::vector<std::vector<double>> Planner::generate_spline_points() {
-  int lane_d = 2+4*lane_n;
-  int goal_lane_d = 2+4*goal_lane_n;
-  int dist_inc = 50;
-  static bool turning_flag = false;
-  if ((lane_n == goal_lane_n) && (!turning_flag)) {
-    auto p0 = getXY(car_s + dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    auto p1 = getXY(car_s + 2*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    auto p2 = getXY(car_s + 3*dist_inc, lane_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    return {p0, p1, p2};
+tk::spline Planner::generate_spline(std::vector<double> start, std::vector<double> end) {
+  
+  /*
+   *  start = {d_i}, end = {d_f}
+   */
+
+  // Define spline points
+  std::vector<double> ptsx;
+  std::vector<double> ptsy;
+  // Global car coordinates in reference frame
+  double ref_x = car_x;
+  double ref_y = car_y;
+  double ref_yaw = deg2rad(car_yaw);  
+  //double v0 = car_speed; 
+
+  // start
+  if (previous_path_x.size() < 2) {
+    double car_x_prev = car_x - cos(ref_yaw) * delta_t;
+    double car_y_prev = car_y - sin(ref_yaw) * delta_t;
+    ptsx.insert(ptsx.end(), {car_x_prev, car_x});
+    ptsy.insert(ptsy.end(), {car_y_prev, car_y});
   } else {
-    turning_flag = true;
-    lane_n = goal_lane_n;
-    auto p0 = getXY(car_s + dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    auto p1 = getXY(car_s + 2*dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    auto p2 = getXY(car_s + 3*dist_inc, lane_d + (goal_lane_d - lane_d)*logistic(spline_points[spline_iterator++]), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    if (spline_iterator > spline_points.size()) {
-      spline_iterator = 0;
-      turning_flag = false;
-    }
-    return {p0, p1, p2};
+    // redefine reference points
+    ref_x = previous_path_x[previous_path_x.size() - 1];
+    ref_y = previous_path_y[previous_path_x.size() - 1];
+    double ref_x_prev = previous_path_x[previous_path_x.size() - 2];
+    double ref_y_prev = previous_path_y[previous_path_x.size() - 2];
+    ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
+    ptsx.insert(ptsx.end(), {ref_x_prev, ref_x});
+    ptsy.insert(ptsy.end(), {ref_y_prev, ref_y});
   }
+
+  std::vector<double> car_sd_ref = getFrenet(ref_x, ref_y, ref_yaw, map_waypoints_x, map_waypoints_y);
+  auto d_init = start[0];
+  auto d_end = end[0];
+  int dist_inc = 50;
+
+  tk::spline s;
+  std::vector<double> p0;
+  std::vector<double> p1;
+  std::vector<double> p2;
+
+  /*
+  * Implement JMT solution here
+  */
+
+  double T = 5;
+  double goal = 100;
+  double goal_d = d_end - d_init;
+  double goal_alpha = asin(goal_d/goal);
+  double goal_s = goal*cos(goal_alpha);  
+  
+  
+  cout << "Problem parameters: " << endl;
+  cout << "T: " << T << endl;
+  cout << "goal_s: " << goal_s << endl;
+  cout << "goal_d: " << goal_d << endl;
+  
+
+  std::vector<double> start_s = {0.0, speed_limit/2.24, 0.0};
+  std::vector<double> end_s = {goal_s, speed_limit/2.24, 0.0};
+  std::vector<double> s_coeffs = jmt_coefficients(start_s, end_s, T);
+
+  std::vector<double> start_d = {0.0, 0.0, 0.0};
+  std::vector<double> end_d = {goal_d, 0.0, 0.0};
+  std::vector<double> d_coeffs = jmt_coefficients(start_d, end_d, T);
+
+  p0 = getXY(car_sd_ref[0] + jmt(2.0, s_coeffs), d_init + jmt(2.0, d_coeffs), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+  p1 = getXY(car_sd_ref[0] + jmt(3.5, s_coeffs), d_init + jmt(3.5, d_coeffs), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+  p2 = getXY(car_sd_ref[0] + jmt(5.0, s_coeffs), d_init + jmt(5.0, d_coeffs), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+
+  /*
+  *
+  */
+  
+
+  //p0 = getXY(car_s + dist_inc, d_end, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+  //p1 = getXY(car_s + 2*dist_inc, d_end, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+  //p2 = getXY(car_s + 3*dist_inc, d_end, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+
+  // augment set of x-y points
+  ptsx.insert(ptsx.end(), {p0[0], p1[0], p2[0]});
+  ptsy.insert(ptsy.end(), {p0[1], p1[1], p2[1]});
+
+  // Convert point to the local frame
+  for(int i = 0; i < ptsx.size(); i++)
+  {
+    double shift_x = ptsx[i] - ref_x;
+    double shift_y = ptsy[i] - ref_y;
+    ptsx[i] = (shift_x * cos(0.0 - ref_yaw) - shift_y * sin(0.0 - ref_yaw));
+    ptsy[i] = (shift_x * sin(0.0 - ref_yaw) + shift_y * cos(0.0 - ref_yaw));
+  }
+  // build spline
+  s.set_points(ptsx, ptsy);
+  
+  return s;
 }
 
 std::vector<double> Planner::jmt_coefficients(std::vector<double> start, std::vector<double> end, double T) {
@@ -110,104 +184,85 @@ double Planner::jmt(double t, std::vector<double> alphas) {
   return result;
 }
 
-std::vector<std::vector<double>> Planner::generate_jm_trajectory(double goal) {
-  int prev_size = previous_path_x.size();
-  // Global car coordinates in reference frame
+std::vector<std::vector<double>> Planner::generate_trajectory(double goal) {
+    
+  static tk::spline s;
+  
+
+  // Calculate reference frame coordinates
   double ref_x = car_x;
   double ref_y = car_y;
   double ref_yaw = deg2rad(car_yaw); 
-  double v0 = car_speed;
-
-  if (prev_size > 2) {
-    // redefine reference points
-    ref_x = previous_path_x[prev_size - 1];
-    ref_y = previous_path_y[prev_size - 1];
-    double ref_x_prev = previous_path_x[prev_size - 2];
-    double ref_y_prev = previous_path_y[prev_size - 2];
-    ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
-    v0 = sqrt(pow(ref_x - ref_x_prev, 2) + pow(ref_x - ref_x_prev, 2))/delta_t;
-  }
-
-  std::vector<double> car_sd_ref = getFrenet(ref_x, ref_y, ref_yaw, map_waypoints_x, map_waypoints_y);
-
-  if (target_speed < speed_limit) {
-      target_speed += acceleration;
-    // cout << "New reference speed: " << target_speed << endl;
+  if (previous_path_x.size() < 2) {
+    double car_x_prev = car_x - cos(ref_yaw) * delta_t;
+    double car_y_prev = car_y - sin(ref_yaw) * delta_t;
   } else {
-    target_speed -= decceleration;
+    // redefine reference points
+    ref_x = previous_path_x[previous_path_x.size() - 1];
+    ref_y = previous_path_y[previous_path_x.size() - 1];
+    double ref_x_prev = previous_path_x[previous_path_x.size() - 2];
+    double ref_y_prev = previous_path_y[previous_path_x.size() - 2];
+    ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
   }
 
+  // Speed controller
+  /*
+  if (target_speed < speed_limit) {
+    target_speed += acceleration;
+  } else {
+  	target_speed -= decceleration;
+  }*/
+
+  static double sum_e = 0.0;
+  double e = speed_limit - target_speed;
+  sum_e += e;
+  
+  double action = 0.05 * e;
+  if (action > 0.6) {
+    action = 0.6;
+  } else if (action < -0.6) {
+    action = -0.6;
+  }
+  target_speed += action;
+  
+  cout << "Target speed is: " << target_speed << endl;
+
+  // Collect points from the previous path
   std::vector<double> next_x_vals;
   std::vector<double> next_y_vals;
-  for (int i = 0; i < prev_size; i++) {
+  for (int i = 0; i < previous_path_x.size(); i++) {
     next_x_vals.push_back(previous_path_x[i]);
     next_y_vals.push_back(previous_path_y[i]);
   }
-  
-  if (goal_lane_n != lane_n) {
+
+  double lane_d = 2+4*lane_n;
+  double goal_lane_d = 2+4*goal_lane_n;
+
+  s = generate_spline({lane_d}, {goal_lane_d});
+
+  if (lane_n != goal_lane_n) {
     lane_n = goal_lane_n;
   }
+
+  double x_add_on = 0.0;
+  double target_x = goal + x_add_on;
+  double target_dist = distance(x_add_on, s(x_add_on), target_x, s(target_x));
   
-  double T = 0.0;
-  double v1 = 0.0;
-  if (v0 >= speed_limit/2.24) {
-    v0 = speed_limit/2.24;
-    T = (-v0 + sqrt(v0*v0 + 2*acceleration*goal))/acceleration; 
-    v1 = v0;
-  } else {
-    T = (-v0 + sqrt(v0*v0 + 2*acceleration*goal))/acceleration; 
-    v1 = v0 + acceleration * T;
-  }
+  double N = target_dist/(0.02 * target_speed/2.24);
 
-  double goal_d = 2+4*goal_lane_n - car_sd_ref[1];
-  double goal_alpha = asin(goal_d/goal);
-  double goal_s = goal*cos(goal_alpha);  
+  for (int i = 0; i <= 50 - previous_path_x.size(); i++) {
+    double x_point = x_add_on + (target_x - x_add_on)/N;
+    double y_point = s(x_point);
 
-  cout << "Problem parameters: " << endl;
-  cout << "T: " << T << endl;
-  cout << "goal_s: " << goal_s << endl;
-  cout << "goal_d: " << goal_d << endl;
-  cout << "v0: " << v0 << endl;
+    x_add_on = x_point;
+    double x_ref = x_point;
+    double y_ref = y_point;
 
-  std::vector<double> start_s = {0.0, v0, 0.0};
-  std::vector<double> end_s = {goal_s, v1, 0.0};
-  std::vector<double> s_coeffs = jmt_coefficients(start_s, end_s, T);
-
-  /*
-  std::vector<double> start_d = {0.0, 0.0, 0.0};
-  std::vector<double> end_d = {goal_d, 0.0, 0.0};
-  std::vector<double> d_coeffs = jmt_coefficients(start_d, end_d, T);
- 
-  cout << "s coefficents: " << endl;
-  for(int i = 0; i < s_coeffs.size(); i++) {
-    cout << s_coeffs[i] << endl;
-  }
-  
-  cout << "d coefficents: " << endl;
-  for(int i = 0; i < d_coeffs.size(); i++) {
-    cout << d_coeffs[i] << endl;
-  }
-  
-  cout << "Try some predictions: " << endl;
-  double dt_next = delta_t;
-  while (dt_next <= 1.0) {
-    cout << "dt: " << dt_next << endl;
-    cout << jmt(dt_next, d_coeffs) << endl;
-    dt_next += delta_t;
-  }*/
-
-  for (int i = 0; i <= 50 - prev_size; i++) {
-
-    double dt_next = (i+1)*delta_t;
-    double s_next = jmt(dt_next, s_coeffs);
-    double d_next = 0;
-    cout << "s next: " << s_next << " d_next: " << d_next << endl;
+    x_point = (x_ref * cos(ref_yaw) - y_ref * sin(ref_yaw));
+    y_point = (x_ref * sin(ref_yaw) + y_ref * cos(ref_yaw));
+    x_point += ref_x;
+    y_point += ref_y;
     
-    std::vector<double> xy_point = getXY(car_sd_ref[0] + s_next, car_sd_ref[1] + d_next, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    cout << "x next: " << xy_point[0] << " y next: " << xy_point[1] << endl;
-
-    double x_point = xy_point[0];
-    double y_point = xy_point[1];
     next_x_vals.push_back(x_point);
     next_y_vals.push_back(y_point);
   }
@@ -223,107 +278,8 @@ std::vector<std::vector<double>> Planner::generate_jm_trajectory(double goal) {
       cout << next_y_vals[i] << endl;
     }
   #endif
-
+  
   return {next_x_vals, next_y_vals};
-}
-
-std::vector<std::vector<double>> Planner::generate_trajectory(double goal) {
-	// Define spline points
-    std::vector<double> ptsx;
-    std::vector<double> ptsy;
-    // Size of the previous path 
-    int prev_size = previous_path_x.size();
-    // Global car coordinates in reference frame
-    double ref_x = car_x;
-    double ref_y = car_y;
-    double ref_yaw = deg2rad(car_yaw);   
-
-    // start
-    if (prev_size < 2) {
-      double car_x_prev = car_x - cos(ref_yaw) * delta_t;
-      double car_y_prev = car_y - sin(ref_yaw) * delta_t;
-      ptsx.insert(ptsx.end(), {car_x_prev, car_x});
-      ptsy.insert(ptsy.end(), {car_y_prev, car_y});
-    } else {
-      // redefine reference points
-      ref_x = previous_path_x[prev_size - 1];
-      ref_y = previous_path_y[prev_size - 1];
-      double ref_x_prev = previous_path_x[prev_size - 2];
-      double ref_y_prev = previous_path_y[prev_size - 2];
-      ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
-      ptsx.insert(ptsx.end(), {ref_x_prev, ref_x});
-      ptsy.insert(ptsy.end(), {ref_y_prev, ref_y});
-    }
-
-    std::vector<std::vector<double>> next_wp = generate_spline_points();
-    ptsx.insert(ptsx.end(), {next_wp[0][0], next_wp[1][0], next_wp[2][0]});
-    ptsy.insert(ptsy.end(), {next_wp[0][1], next_wp[1][1], next_wp[2][1]});
-
-    // Convert point to the local frame
-    for(int i = 0; i < ptsx.size(); i++)
-    {
-      double shift_x = ptsx[i] - ref_x;
-      double shift_y = ptsy[i] - ref_y;
-      ptsx[i] = (shift_x * cos(0.0 - ref_yaw) - shift_y * sin(0.0 - ref_yaw));
-      ptsy[i] = (shift_x * sin(0.0 - ref_yaw) + shift_y * cos(0.0 - ref_yaw));
-    }
-
-    
-    if (target_speed < speed_limit) {
-      	target_speed += acceleration;
-      // cout << "New reference speed: " << target_speed << endl;
-    } else {
-    	target_speed -= decceleration;
-    }
-
-    tk::spline s;
-    s.set_points(ptsx, ptsy);
-
-    std::vector<double> next_x_vals;
-    std::vector<double> next_y_vals;
-
-    for (int i = 0; i < prev_size; i++) {
-      next_x_vals.push_back(previous_path_x[i]);
-      next_y_vals.push_back(previous_path_y[i]);
-    }
-
-    double target_x = goal;
-    double target_y = s(target_x);
-    double target_dist = distance(0.0, 0.0, target_x, target_y);
-
-    double x_add_on = 0.0;
-    double N = target_dist/(0.02 * target_speed/2.24);
-
-    for (int i = 0; i <= 50 - prev_size; i++) {
-      double x_point = x_add_on + target_x/N;
-      double y_point = s(x_point);
-
-      x_add_on = x_point;
-      double x_ref = x_point;
-      double y_ref = y_point;
-
-      x_point = (x_ref * cos(ref_yaw) - y_ref * sin(ref_yaw));
-      y_point = (x_ref * sin(ref_yaw) + y_ref * cos(ref_yaw));
-      x_point += ref_x;
-      y_point += ref_y;
-      
-      next_x_vals.push_back(x_point);
-      next_y_vals.push_back(y_point);
-    }
-
-    #if DEBUG 
-      cout << "x-points: " << endl;
-      for(int i = 0; i < next_x_vals.size(); i++) {
-        cout << next_x_vals[i] << endl;
-      } 
-
-      cout << "y-points: " << endl;
-      for(int i = 0; i < next_y_vals.size(); i++) {
-        cout << next_y_vals[i] << endl;
-      }
-    #endif
-
-    return {next_x_vals, next_y_vals};
 }
 
 void Planner::set_speed_limit(int value) {
@@ -415,7 +371,6 @@ double Planner::lane_cost(std::vector<int> dist_range, int lane) {
   return cost;
 }
 
-
 void Planner::keep_distance(int dist, int id) {
   // find the vehicle with given id
   int vehicle_num = -1;
@@ -438,4 +393,8 @@ void Planner::keep_distance(int dist, int id) {
     set_speed_limit(speed_limit);
     decceleration = 0.224;
   }
+}
+
+std::vector<std::vector<double>> Planner::get_sf() {
+  
 }

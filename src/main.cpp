@@ -7,8 +7,10 @@
 #include <vector>
 #include "json.hpp"
 #include "planner.h"
+#include "matplotlibcpp.h"
 
 using namespace std;
+namespace plt = matplotlibcpp;
 
 // for convenience
 using json = nlohmann::json;
@@ -22,6 +24,8 @@ int main() {
   vector<double> map_waypoints_s;
   vector<double> map_waypoints_dx;
   vector<double> map_waypoints_dy;
+
+  bool plot_flag = true;
 
   // Waypoint map to read from
   string map_file_ = "../data/highway_map.csv";
@@ -50,9 +54,19 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
 
+  std::vector<double>::const_iterator firstx = map_waypoints_x.begin() + 4;
+  std::vector<double>::const_iterator lastx = map_waypoints_x.begin() + 50;
+  std::vector<double> path_x(firstx, lastx);
+
+  std::vector<double>::const_iterator firsty = map_waypoints_y.begin() + 4;
+  std::vector<double>::const_iterator lasty = map_waypoints_y.begin() + 50;
+  std::vector<double> path_y(firsty, lasty);
+
+  int counter = 0;
+
   // Create a behaviour planner for our car
   Planner p;
-  h.onMessage([&p, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&counter, &path_x, &path_y, &plot_flag, &p, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -112,8 +126,8 @@ int main() {
                 p.change_lane(current_lane + 1);
               } //else if (vehicles_ahead[current_lane - 1]  == -1) {
               else if ((!left_lane_cost) || ((left_lane_cost <= right_lane_cost) && left_lane_cost != 100)) {
-                  cout << "Lane change to the left" << endl;
-                  p.change_lane(current_lane - 1);
+                cout << "Lane change to the left" << endl;
+                p.change_lane(current_lane - 1);
               } else {
                 cout << "Keep distance, id: " << vehicle_ahead_id << endl;
                 p.keep_distance(20, vehicle_ahead_id);
@@ -143,10 +157,67 @@ int main() {
             }
           } else {
             p.set_speed_limit(49.5);
+          } 
+          
+          next_xy_vals = p.generate_trajectory(20.0);
+          counter++;
+
+          if (counter == 1) {
+            plt::subplot(1, 1, 1);
+            plt::title("Generated trajectory");
+            plt::named_plot("Map path", path_x, path_y, "b.");
+            plt::named_plot("Trajectory", next_xy_vals[0], next_xy_vals[1], "k--");
+            plt::legend();
+            plt::grid(true);
+          } else if (counter < 1000) {
+            plt::named_plot("Trajectory", next_xy_vals[0], next_xy_vals[1], "k--");
+          } else if (counter == 1000) {
+            plt::show();
           }
 
-          next_xy_vals = p.generate_trajectory(20.0);
+          /*
+          if (plot_flag) {
+            
+            std::vector<double> car_x = {j[1]["x"]};
+            std::vector<double> car_y = {j[1]["y"]};
+            std::vector<double> car_s = {j[1]["s"]};
 
+            std::vector<double> start_map_x = {map_waypoints_x[0]};
+            std::vector<double> start_map_y = {map_waypoints_y[0]};
+            plt::subplot(1, 1, 1);
+            plt::title("Map points");
+            plt::named_plot("Map waypoints", map_waypoints_x, map_waypoints_y, "r.");
+            plt::named_plot("Map id = 0", start_map_x, start_map_y, "k.");
+            plt::named_plot("Vehicle position", car_x, car_y, "b.");
+            plt::legend();
+            plt::grid(true);
+            plt::show();
+
+            plt::subplot(2, 1, 1);
+            plt::title("Map points x(s)");
+            plt::named_plot("Map waypoints", map_waypoints_s, map_waypoints_x, "r.");
+            plt::named_plot("Vehicle position", car_s, car_x, "b.");
+            plt::legend();
+            plt::grid(true);
+
+            plt::subplot(2, 1, 2);
+            plt::title("Map points y(s)");
+            plt::named_plot("Map waypoints", map_waypoints_s, map_waypoints_y, "r.");
+            plt::named_plot("Vehicle position", car_s, car_y, "b.");
+            plt::legend();
+            plt::grid(true);
+            plt::show();
+            
+            plt::subplot(1, 1, 1);
+            plt::title("Generated trajectory");
+            plt::named_plot("Map path", path_x, path_y, "r.");
+            plt::named_plot("Trajectory", next_xy_vals[0], next_xy_vals[1], "b--");
+            plt::legend();
+            plt::grid(true);
+            plt::show();
+            plot_flag = false;
+          }*/
+          
           json msgJson;
           msgJson["next_x"] = next_xy_vals[0];
           msgJson["next_y"] = next_xy_vals[1];
