@@ -192,15 +192,7 @@ std::vector<std::vector<double>> Planner::generate_trajectory(double goal) {
     double ref_y_prev = previous_path_y[previous_path_x.size() - 2];
     ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
   }
-
-  // Speed controller
-  /*
-  if (target_speed < speed_limit) {
-    target_speed += acceleration;
-  } else {
-  	target_speed -= decceleration;
-  }*/
-
+  
   static double sum_e = 0.0;
   double e = speed_limit - target_speed;
   sum_e += e;
