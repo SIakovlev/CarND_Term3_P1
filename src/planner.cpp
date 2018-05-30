@@ -75,12 +75,12 @@ tk::spline Planner::generate_spline(std::vector<double> start, std::vector<doubl
   double goal_alpha = asin(goal_d/goal);
   double goal_s = goal*cos(goal_alpha);  
   
-  
+  /*
   cout << "Problem parameters: " << endl;
   cout << "T: " << T << endl;
   cout << "goal_s: " << goal_s << endl;
   cout << "goal_d: " << goal_d << endl;
-  
+  */
 
   std::vector<double> start_s = {0.0, speed_limit/2.24, 0.0};
   std::vector<double> end_s = {goal_s, speed_limit/2.24, 0.0};
