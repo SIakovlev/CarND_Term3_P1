@@ -4,7 +4,7 @@
 Planner::Planner(){}
 Planner::~Planner() {}
 
-void Planner::read_data(json& data_obj, std::vector<std::vector<double>>& map_data) {
+void Planner::read_data(json& data_obj, std::vector<std::vector<double>> &map_data) {
 
 	// JSON data
   this->car_x = data_obj["x"];
@@ -22,20 +22,14 @@ void Planner::read_data(json& data_obj, std::vector<std::vector<double>>& map_da
 	// Sensor Fusion Data, a list of all other cars on the same side of the road.
 	this->sensor_fusion = data_obj["sensor_fusion"];
 
-	// Map data
-	this->map_waypoints_x = map_data[0];
+	// Map data	
+  this->map_waypoints_x = map_data[0];
 	this->map_waypoints_y = map_data[1];
 	this->map_waypoints_s = map_data[2];
-	this->map_waypoints_dx = map_data[3];
-	this->map_waypoints_dy = map_data[4];
 }
 
 tk::spline Planner::generate_spline(std::vector<double> start, std::vector<double> end) {
   
-  /*
-   *  start = {d_i}, end = {d_f}
-   */
-
   // Define spline points
   std::vector<double> ptsx;
   std::vector<double> ptsy;
@@ -72,9 +66,8 @@ tk::spline Planner::generate_spline(std::vector<double> start, std::vector<doubl
   std::vector<double> p1;
   std::vector<double> p2;
 
-  /*
-  * Implement JMT solution here
-  */
+  // Implement JMT solution here
+  
 
   double T = 5;
   double goal = 100;
@@ -101,9 +94,6 @@ tk::spline Planner::generate_spline(std::vector<double> start, std::vector<doubl
   p1 = getXY(car_sd_ref[0] + jmt(3.5, s_coeffs), d_init + jmt(3.5, d_coeffs), map_waypoints_s, map_waypoints_x, map_waypoints_y);
   p2 = getXY(car_sd_ref[0] + jmt(5.0, s_coeffs), d_init + jmt(5.0, d_coeffs), map_waypoints_s, map_waypoints_x, map_waypoints_y);
 
-  /*
-  *
-  */
 
   //p0 = getXY(car_s + dist_inc, d_end, map_waypoints_s, map_waypoints_x, map_waypoints_y);
   //p1 = getXY(car_s + 2*dist_inc, d_end, map_waypoints_s, map_waypoints_x, map_waypoints_y);
@@ -186,7 +176,6 @@ double Planner::jmt(double t, std::vector<double> alphas) {
 std::vector<std::vector<double>> Planner::generate_trajectory(double goal) {
     
   static tk::spline s;
-  
 
   // Calculate reference frame coordinates
   double ref_x = car_x;
@@ -392,8 +381,4 @@ void Planner::keep_distance(int dist, int id) {
     set_speed_limit(speed_limit);
     decceleration = 0.224;
   }
-}
-
-std::vector<std::vector<double>> Planner::get_sf() {
-  
 }

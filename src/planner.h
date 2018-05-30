@@ -33,13 +33,13 @@ public:
 	json sensor_fusion;
 	// --------------------------------------------------------------------------
 
-	// Map data 
+	// Map data
+	tk::spline s_xs;
+	tk::spline s_ys; 
+
 	std::vector<double> map_waypoints_x;
   	std::vector<double> map_waypoints_y;
   	std::vector<double> map_waypoints_s;
-  	std::vector<double> map_waypoints_dx;
-  	std::vector<double> map_waypoints_dy;
-
 	// --------------------------------------------------------------------------
 
 	int lane_n = 1; // lane number: 0 - left lane, 1 - middle late, 2 - right lane
@@ -57,7 +57,7 @@ public:
 	// Destructor (virtual???)
 	~Planner();
 
-	void read_data(json& data_obj, std::vector<std::vector<double>>& map_data);
+	void read_data(json& data_obj, std::vector<std::vector<double>> &map_data);
 
 
 	std::vector<std::vector<double>> generate_trajectory(double goal);
@@ -74,7 +74,6 @@ public:
 
 	double lane_cost(std::vector<int> dist_range, int lane);
 	int get_lane();
-	std::vector<std::vector<double>> get_sf();
 
 	std::vector<int> vehicles_around(std::vector<int> dist_range, bool dir);
 
