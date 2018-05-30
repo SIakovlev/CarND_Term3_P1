@@ -55,18 +55,35 @@ int main() {
   }
 
   std::vector<double>::const_iterator firstx = map_waypoints_x.begin() + 4;
-  std::vector<double>::const_iterator lastx = map_waypoints_x.begin() + 50;
+  std::vector<double>::const_iterator lastx = map_waypoints_x.begin() + 60;
   std::vector<double> path_x(firstx, lastx);
 
   std::vector<double>::const_iterator firsty = map_waypoints_y.begin() + 4;
-  std::vector<double>::const_iterator lasty = map_waypoints_y.begin() + 50;
+  std::vector<double>::const_iterator lasty = map_waypoints_y.begin() + 60;
   std::vector<double> path_y(firsty, lasty);
+
+  std::vector<double>::const_iterator firsts = map_waypoints_s.begin() + 4;
+  std::vector<double>::const_iterator lasts = map_waypoints_s.begin() + 60;
+  std::vector<double> path_s(firsts, lasts);
+
+  tk::spline s_xs;
+  tk::spline s_ys;
+  s_xs.set_points(map_waypoints_s, map_waypoints_x);
+  s_ys.set_points(map_waypoints_s, map_waypoints_y);
+
+  std::vector<double> path_xd4;
+  std::vector<double> path_yd4;
+  for (int i = 0; i < path_s.size(); i++) {
+    std::vector<double> temp = getXY_splines(path_s[i], 4.0, s_xs, s_ys);
+    path_xd4.push_back(temp[0]);
+    path_yd4.push_back(temp[1]);
+  }
 
   int counter = 0;
 
   // Create a behaviour planner for our car
   Planner p;
-  h.onMessage([&counter, &path_x, &path_y, &plot_flag, &p, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&counter, &path_x, &path_y, &s_xs, &s_ys, &plot_flag, &p, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -160,12 +177,15 @@ int main() {
           } 
           
           next_xy_vals = p.generate_trajectory(20.0);
-          counter++;
-
+          /*
+          //counter++;
+          
+          
           if (counter == 1) {
             plt::subplot(1, 1, 1);
             plt::title("Generated trajectory");
-            plt::named_plot("Map path", path_x, path_y, "b.");
+            plt::named_plot("Map path", path_x, path_y, "b-");
+            plt::named_plot("Map path 1st lane", path_xd4, path_yd4, "b-");
             plt::named_plot("Trajectory", next_xy_vals[0], next_xy_vals[1], "k--");
             plt::legend();
             plt::grid(true);
@@ -173,8 +193,8 @@ int main() {
             plt::named_plot("Trajectory", next_xy_vals[0], next_xy_vals[1], "k--");
           } else if (counter == 1000) {
             plt::show();
-          }
-
+          }*/
+          
           /*
           if (plot_flag) {
             
@@ -184,21 +204,15 @@ int main() {
 
             std::vector<double> start_map_x = {map_waypoints_x[0]};
             std::vector<double> start_map_y = {map_waypoints_y[0]};
+
             plt::subplot(1, 1, 1);
             plt::title("Map points");
             plt::named_plot("Map waypoints", map_waypoints_x, map_waypoints_y, "r.");
-            plt::named_plot("Map id = 0", start_map_x, start_map_y, "k.");
+            plt::named_plot("Map id = 0", start_map_x, start_map_y, "k");
             plt::named_plot("Vehicle position", car_x, car_y, "b.");
             plt::legend();
             plt::grid(true);
             plt::show();
-
-            plt::subplot(2, 1, 1);
-            plt::title("Map points x(s)");
-            plt::named_plot("Map waypoints", map_waypoints_s, map_waypoints_x, "r.");
-            plt::named_plot("Vehicle position", car_s, car_x, "b.");
-            plt::legend();
-            plt::grid(true);
 
             plt::subplot(2, 1, 2);
             plt::title("Map points y(s)");
@@ -210,12 +224,14 @@ int main() {
             
             plt::subplot(1, 1, 1);
             plt::title("Generated trajectory");
-            plt::named_plot("Map path", path_x, path_y, "r.");
+            plt::named_plot("Map path", path_x, path_y, "r-");
+            plt::named_plot("Map path", path_xd4, path_yd4, "k-");
             plt::named_plot("Trajectory", next_xy_vals[0], next_xy_vals[1], "b--");
             plt::legend();
             plt::grid(true);
             plt::show();
             plot_flag = false;
+            
           }*/
           
           json msgJson;

@@ -4,6 +4,7 @@
 CMakeFiles/path_planning.dir/src/helper.cpp.o
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/helper.cpp
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/helper.h
+ /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h
 CMakeFiles/path_planning.dir/src/main.cpp.o
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/Cholesky
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/Core
@@ -408,4 +409,7 @@ CMakeFiles/path_planning.dir/src/planner.cpp.o
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/json.hpp
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/planner.cpp
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/planner.h
+ /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h
+CMakeFiles/path_planning.dir/src/spline.cpp.o
+ /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.cpp
  /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h

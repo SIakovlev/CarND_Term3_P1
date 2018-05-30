@@ -204,6 +204,33 @@ src/planner.cpp.s:
 	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/src/planner.cpp.s
 .PHONY : src/planner.cpp.s
 
+src/spline.o: src/spline.cpp.o
+
+.PHONY : src/spline.o
+
+# target to build an object file
+src/spline.cpp.o:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/src/spline.cpp.o
+.PHONY : src/spline.cpp.o
+
+src/spline.i: src/spline.cpp.i
+
+.PHONY : src/spline.i
+
+# target to preprocess a source file
+src/spline.cpp.i:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/src/spline.cpp.i
+.PHONY : src/spline.cpp.i
+
+src/spline.s: src/spline.cpp.s
+
+.PHONY : src/spline.s
+
+# target to generate assembly for a file
+src/spline.cpp.s:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/src/spline.cpp.s
+.PHONY : src/spline.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -222,6 +249,9 @@ help:
 	@echo "... src/planner.o"
 	@echo "... src/planner.i"
 	@echo "... src/planner.s"
+	@echo "... src/spline.o"
+	@echo "... src/spline.i"
+	@echo "... src/spline.s"
 .PHONY : help
 
 

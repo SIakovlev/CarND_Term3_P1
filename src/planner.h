@@ -5,7 +5,6 @@
 #include "json.hpp"
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
-#include "spline.h"
 #include "helper.h"
 
 #define DEBUG 0

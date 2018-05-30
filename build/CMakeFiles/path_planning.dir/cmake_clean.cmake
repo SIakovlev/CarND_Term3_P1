@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/path_planning.dir/src/main.cpp.o"
   "CMakeFiles/path_planning.dir/src/planner.cpp.o"
   "CMakeFiles/path_planning.dir/src/helper.cpp.o"
+  "CMakeFiles/path_planning.dir/src/spline.cpp.o"
   "path_planning.pdb"
   "path_planning"
 )

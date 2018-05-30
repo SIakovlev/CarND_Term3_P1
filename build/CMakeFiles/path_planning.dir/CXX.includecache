@@ -783,6 +783,8 @@ vector
 -
 string
 -
+spline.h
+/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h
 
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/json.hpp
 algorithm
@@ -897,10 +899,12 @@ Eigen-3.3/Eigen/Core
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/Core
 Eigen-3.3/Eigen/QR
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/Eigen-3.3/Eigen/QR
-spline.h
-/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h
 helper.h
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/helper.h
+
+/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.cpp
+spline.h
+/home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h
 
 /home/sergey/dev/studies/CarND_Term3/CarND_Term3_P1/src/spline.h
 cstdio

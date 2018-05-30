@@ -147,3 +147,25 @@ std::vector<double> getXY(double s, double d, const std::vector<double> &maps_s,
 
 	return {x,y};
 }
+
+// Transform from Frenet s,d coordinates to Cartesian x,y
+std::vector<double> getXY_splines(double s, double d, const tk::spline &s_xs, const tk::spline &s_ys)
+{
+	double x0 = s_xs(s-0.5);
+	double y0 = s_ys(s-0.5);
+
+	double x2 = s_xs(s+0.5);
+	double y2 = s_ys(s+0.5);
+
+	double heading = atan2((y2 - y0), (x2 - x0));
+	
+	double x1 = s_xs(s);
+	double y1 = s_ys(s);
+
+	double perp_heading = heading-pi()/2;
+
+	double x = x1 + d*cos(perp_heading);
+	double y = y1 + d*sin(perp_heading);
+
+	return {x,y};
+}

@@ -104,7 +104,6 @@ tk::spline Planner::generate_spline(std::vector<double> start, std::vector<doubl
   /*
   *
   */
-  
 
   //p0 = getXY(car_s + dist_inc, d_end, map_waypoints_s, map_waypoints_x, map_waypoints_y);
   //p1 = getXY(car_s + 2*dist_inc, d_end, map_waypoints_s, map_waypoints_x, map_waypoints_y);
