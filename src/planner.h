@@ -68,7 +68,7 @@ public:
 	
 
 
-	void set_speed_limit(int value);
+	void set_speed_limit(double value);
 	void change_lane(int value);
 	void keep_distance(int dist, int id);
 

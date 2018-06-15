@@ -7,10 +7,9 @@
 #include <vector>
 #include "json.hpp"
 #include "planner.h"
-#include "matplotlibcpp.h"
+//#include "matplotlibcpp.h"
 
 using namespace std;
-namespace plt = matplotlibcpp;
 
 // for convenience
 using json = nlohmann::json;

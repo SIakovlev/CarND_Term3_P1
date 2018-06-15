@@ -262,7 +262,7 @@ std::vector<std::vector<double>> Planner::generate_trajectory(double goal) {
   return {next_x_vals, next_y_vals};
 }
 
-void Planner::set_speed_limit(int value) {
+void Planner::set_speed_limit(double value) {
 	this->speed_limit = value;
 }
 

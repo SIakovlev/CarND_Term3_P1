@@ -23,10 +23,10 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 add_executable(path_planning ${sources})
 
-find_package(PythonLibs 2.7)
+#find_package(PythonLibs 2.7)
 
-target_include_directories(path_planning PRIVATE ${PYTHON_INCLUDE_DIRS})
+#target_include_directories(path_planning PRIVATE ${PYTHON_INCLUDE_DIRS})
 
-target_link_libraries(path_planning ${PYTHON_LIBRARIES})
+#target_link_libraries(path_planning ${PYTHON_LIBRARIES})
 
 target_link_libraries(path_planning z ssl uv uWS)
